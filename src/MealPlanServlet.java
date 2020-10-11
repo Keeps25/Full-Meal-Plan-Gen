@@ -46,8 +46,9 @@ public class MealPlanServlet extends HttpServlet {
                     double carbs = results.getDouble(4);
                     double proteins = results.getDouble(5);
                     double fats = results.getDouble(6);
+                    String unit = results.getString(7);
 
-                    Ingredient curr = new Ingredient(name, ID, picID, calories, carbs, proteins, fats);
+                    Ingredient curr = new Ingredient(name, ID, picID, calories, carbs, proteins, fats, unit);
                     ingredients.put(ID, curr);
                 }
 
@@ -194,6 +195,7 @@ public class MealPlanServlet extends HttpServlet {
             json += "\n\t\t{";
             json += "\n\t\t\t\"name\": \"" + ingredients.get(recipe.ingredientsIDList.get(i)).ingredientName;
             json += "\",\n\t\t\t\"quantity\": \"" + recipe.ingredientsQuantity.get(i);
+            json += "\",\n\t\t\t\"units\": \"" + ingredients.get(recipe.ingredientsIDList.get(i)).unit;
             json += "\"\n\t\t}";
         }
         json += "\n]";

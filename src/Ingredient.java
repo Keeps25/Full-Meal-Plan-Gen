@@ -6,8 +6,9 @@ public class Ingredient {
     public double carbs;
     public double protein;
     public double fat;
+    public String unit;
 
-    public Ingredient(String name, int ID, String picID, double calories, double carbs, double protein, double fat) {
+    public Ingredient(String name, int ID, String picID, double calories, double carbs, double protein, double fat, String unit) {
         this.ingredientName = name;
         this.ingredientID = ID;
         this.picID = picID;
@@ -15,5 +16,6 @@ public class Ingredient {
         this.carbs = carbs;
         this.protein = protein;
         this.fat = fat;
+        this.unit = unit;
     }
 }
