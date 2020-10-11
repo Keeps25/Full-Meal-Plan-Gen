@@ -10,71 +10,71 @@ public class MealPlanServlet extends HttpServlet {
     HashMap<Integer, Ingredient> ingredients = new HashMap<>();
     HashMap<Integer, Recipe> recipes = new HashMap<>();
     public void init() throws ServletException {
+        if (recipes.isEmpty() || ingredients.isEmpty()) {
         Connection connection = null;
         //Keys are Ingredient and Recipe IDs respectively
         //Values are the Ingredient or Recipe object itself
+            try {
+                String driver = "com.mysql.jdbc.Driver";
+                Class.forName(driver);
+
+                //Connect to database
+                String server = "localhost";
+                String path = "test";
+                String url = "jdbc:mysql://" + server + "/" + path;
+                String user = "bobbarker";
+                String pass = "password123";
+                connection = DriverManager.getConnection(url, user, pass);
+                System.out.println("Successfully connected to database!");
 
 
-        try {
-            String driver = "com.mysql.jdbc.Driver";
-            Class.forName(driver);
-
-            //Connect to database
-            String server = "localhost";
-            String path = "test";
-            String url = "jdbc:mysql://" + server + "/" + path;
-            String user = "bobbarker";
-            String pass = "password123";
-            connection = DriverManager.getConnection(url, user, pass);
-            System.out.println("Successfully connected to database!");
-
-
-        } catch (ClassNotFoundException e) {
-            System.out.println("Couldn't find database driver " + e.getMessage());
-        } catch (SQLException e) {
-            System.out.println("An error occurred. Could not connect to database " + e.getMessage());
-        }
-
-        try {
-            Statement statement = connection.createStatement();
-            ResultSet results = statement.executeQuery("SELECT * FROM ingredient");
-            //Loop through recipes, add to HashMap
-            while (results.next()) {
-                String name = results.getString(0);
-                int ID = results.getInt(1);
-                String picID = results.getString(2);
-                double calories = results.getDouble(3);
-                double carbs = results.getDouble(4);
-                double proteins = results.getDouble(5);
-                double fats = results.getDouble(6);
-
-                Ingredient curr = new Ingredient(name, ID, picID, calories, carbs, proteins, fats);
-                ingredients.put(ID, curr);
+            } catch (ClassNotFoundException e) {
+                System.out.println("Couldn't find database driver " + e.getMessage());
+            } catch (SQLException e) {
+                System.out.println("An error occurred. Could not connect to database " + e.getMessage());
             }
 
-            results = statement.executeQuery("SELECT * FROM recipe");
-            //Looping through recipes, add to HashMap
-            while (results.next()) {
-                String name = results.getString(0);
-                int ID = results.getInt(1);
-                String picID = results.getString(2);
+            try {
+                Statement statement = connection.createStatement();
+                ResultSet results = statement.executeQuery("SELECT * FROM ingredient");
+                //Loop through recipes, add to HashMap
+                while (results.next()) {
+                    String name = results.getString(0);
+                    int ID = results.getInt(1);
+                    String picID = results.getString(2);
+                    double calories = results.getDouble(3);
+                    double carbs = results.getDouble(4);
+                    double proteins = results.getDouble(5);
+                    double fats = results.getDouble(6);
 
-                //Parse integer IDs
-                String ingredientsIDsList = results.getString(3);
-                ArrayList<Integer> IDlist = parseString(ingredientsIDsList);
-                //Parse double Quantities
-                String ingredientsQuantitiesList = results.getString(4);
-                ArrayList<Double> quantitiesList = parseString2(ingredientsQuantitiesList);
+                    Ingredient curr = new Ingredient(name, ID, picID, calories, carbs, proteins, fats);
+                    ingredients.put(ID, curr);
+                }
 
-                Recipe recipe = new Recipe(name, ID, picID, IDlist, quantitiesList);
-                recipes.put(ID, recipe);
+                results = statement.executeQuery("SELECT * FROM recipe");
+                //Looping through recipes, add to HashMap
+                while (results.next()) {
+                    String name = results.getString(0);
+                    int ID = results.getInt(1);
+                    String picID = results.getString(2);
+
+                    //Parse integer IDs
+                    String ingredientsIDsList = results.getString(3);
+                    ArrayList<Integer> IDlist = parseString(ingredientsIDsList);
+                    //Parse double Quantities
+                    String ingredientsQuantitiesList = results.getString(4);
+                    ArrayList<Double> quantitiesList = parseString2(ingredientsQuantitiesList);
+
+                    Recipe recipe = new Recipe(name, ID, picID, IDlist, quantitiesList);
+                    recipes.put(ID, recipe);
+                }
+
+            } catch (Exception e) {
+                System.out.println("Couldn't retrieve data successfully" + e.getMessage());
             }
 
-        } catch (Exception e) {
-            System.out.println("Couldn't retrieve data successfully" + e.getMessage());
+            System.out.println("Recipes and Ingredients have been retrieved from server");
         }
-
-        System.out.println("Recipes and Ingredients have been retrieved from server");
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -83,7 +83,7 @@ public class MealPlanServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
         int calories = Integer.parseInt(request.getParameter("calories"));
 
-        String json = "[";
+        String json = "{";
         json += sendRecipes(ingredients, recipes, calories);
         json += "\n}";
 
@@ -143,7 +143,6 @@ public class MealPlanServlet extends HttpServlet {
     private static String sendRecipes(HashMap<Integer, Ingredient> ingredients, HashMap<Integer, Recipe> recipes, int totalCal) {
         String result = "";
         int recipesSize = recipes.size();
-        System.out.println(recipesSize);
         Random r = new Random();
         String[] days =  {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" , "Sunday"};
         String[] times =  {"Breakfast", "Lunch", "Dinner"};
@@ -161,7 +160,6 @@ public class MealPlanServlet extends HttpServlet {
                 while ((currentCal == 0 || currentCal > caloriesLeft) && timeout < 10){
                     currentCal = 0;
                     randomRecipe = recipes.get(r.nextInt(recipesSize) + 1);
-                    System.out.println(randomRecipe.recipeName);
                     for (int y = 0; y < randomRecipe.ingredientsIDList.size(); y++){
                         int ingredientID = randomRecipe.ingredientsIDList.get(y);
                         currentCal += ingredients.get(ingredientID).calories * randomRecipe.ingredientsQuantity.get(y);
