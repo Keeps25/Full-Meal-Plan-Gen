@@ -1,18 +1,19 @@
+import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
-import java.io.FileWriter;
-import java.io.IOException;
+import javax.servlet.*;
+import javax.servlet.http.*;
 
-public class Main {
-    public static void main(String[] args) {
-        int caloriecount_test = 1500;
+public class MealPlanServlet extends HttpServlet {
+    HashMap<Integer, Ingredient> ingredients = new HashMap<>();
+    HashMap<Integer, Recipe> recipes = new HashMap<>();
+    public void init() throws ServletException {
         Connection connection = null;
         //Keys are Ingredient and Recipe IDs respectively
         //Values are the Ingredient or Recipe object itself
-        HashMap<Integer, Ingredient> ingredients = new HashMap<>();
-        HashMap<Integer, Recipe> recipes = new HashMap<>();
+
 
         try {
             String driver = "com.mysql.jdbc.Driver";
@@ -68,55 +69,29 @@ public class Main {
                 Recipe recipe = new Recipe(name, ID, picID, IDlist, quantitiesList);
                 recipes.put(ID, recipe);
             }
-            String json = "[";
-            json += sendRecipes(ingredients, recipes, 2550);
-            finishAndSendJson(json);
 
         } catch (Exception e) {
             System.out.println("Couldn't retrieve data successfully" + e.getMessage());
         }
 
         System.out.println("Recipes and Ingredients have been retrieved from server");
-
-
     }
-    /*public class Main {
-        public static void main(String[] args) {
-            //Keys are Ingredient and Recipe IDs respectively
-            //Values are the Ingredient or Recipe object itself
-            HashMap<Integer, Ingredient> ingredients = new HashMap<>();
-            HashMap<Integer, Recipe> recipes = new HashMap<>();
-            //Loop through recipes, add to HashMap
-            ingredients.put(1, new Ingredient("bread", 1, null, 100, 5, 5, 5));
-            ingredients.put(2, new Ingredient("ham", 2, null, 230, 5, 5, 5));
-            ingredients.put(3, new Ingredient("sham", 3, null, 230, 5, 5, 5));
-            ingredients.put(4, new Ingredient("chowder", 4, null, 630, 5, 5, 5));
-            ingredients.put(5, new Ingredient("gold", 3, null, 1930, 5, 5, 5));
-            ArrayList<Integer> ingredientIds = new ArrayList<>();
-            ingredientIds.add(1);
-            ingredientIds.add(2);
-            ArrayList<Double> quantitiesList = new ArrayList<>();
-            quantitiesList.add(1.0);
-            quantitiesList.add(1.0);
-            recipes.put(1, new Recipe("ham sandwich", 1, null, ingredientIds, quantitiesList));
-            ingredientIds = new ArrayList<>();
-            ingredientIds.add(3);
-            ingredientIds.add(4);
-            ingredientIds.add(5);
-            quantitiesList = new ArrayList<>();
-            quantitiesList.add(1.0);
-            quantitiesList.add(.5);
-            quantitiesList.add(.1);
-            recipes.put(2, new Recipe("clam chowder", 2, null, ingredientIds, quantitiesList));
-            System.out.println(recipes.size());
-            String json = "[";
-            json += sendRecipes(ingredients, recipes, 2550);
-            finishAndSendJson(json);
 
-            System.out.println("Recipes and Ingredients have been retrieved from server");
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
+        int calories = Integer.parseInt(request.getParameter("calories"));
 
+        String json = "[";
+        json += sendRecipes(ingredients, recipes, calories);
+        json += "\n}";
 
-        }*/
+        out.write(json);
+
+        out.close();
+    }
+
     private static ArrayList<Integer> parseString(String list) {
         ArrayList<Integer> finalList = new ArrayList<>();
         String num = "";
@@ -226,14 +201,4 @@ public class Main {
         json += "\n]";
         return json;
     }
-
-    private static void finishAndSendJson(String json) {
-        json += "\n}";
-        System.out.println(json);
-    }
-
-    /*private static Recipe findRecipe(HashMap<Integer, Ingredient> ingredients, HashMap<Integer, Recipe> recipes, int minCal, int maxCal) {
-        findRecipe(ingredients, recipes, 0, (int)(totalCal*.4));
-    }*/
-
 }
