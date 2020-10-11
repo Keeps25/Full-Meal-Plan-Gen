@@ -80,43 +80,43 @@ public class Main {
 
 
     }
-/*public class Main {
-    public static void main(String[] args) {
-        //Keys are Ingredient and Recipe IDs respectively
-        //Values are the Ingredient or Recipe object itself
-        HashMap<Integer, Ingredient> ingredients = new HashMap<>();
-        HashMap<Integer, Recipe> recipes = new HashMap<>();
-        //Loop through recipes, add to HashMap
-        ingredients.put(1, new Ingredient("bread", 1, null, 100, 5, 5, 5));
-        ingredients.put(2, new Ingredient("ham", 2, null, 230, 5, 5, 5));
-        ingredients.put(3, new Ingredient("sham", 3, null, 230, 5, 5, 5));
-        ingredients.put(4, new Ingredient("chowder", 4, null, 630, 5, 5, 5));
-        ingredients.put(5, new Ingredient("gold", 3, null, 1930, 5, 5, 5));
-        ArrayList<Integer> ingredientIds = new ArrayList<>();
-        ingredientIds.add(1);
-        ingredientIds.add(2);
-        ArrayList<Double> quantitiesList = new ArrayList<>();
-        quantitiesList.add(1.0);
-        quantitiesList.add(1.0);
-        recipes.put(1, new Recipe("ham sandwich", 1, null, ingredientIds, quantitiesList));
-        ingredientIds = new ArrayList<>();
-        ingredientIds.add(3);
-        ingredientIds.add(4);
-        ingredientIds.add(5);
-        quantitiesList = new ArrayList<>();
-        quantitiesList.add(1.0);
-        quantitiesList.add(.5);
-        quantitiesList.add(.1);
-        recipes.put(2, new Recipe("clam chowder", 2, null, ingredientIds, quantitiesList));
-        System.out.println(recipes.size());
-        String json = "[";
-        json += sendRecipes(ingredients, recipes, 2550);
-        finishAndSendJson(json);
+    /*public class Main {
+        public static void main(String[] args) {
+            //Keys are Ingredient and Recipe IDs respectively
+            //Values are the Ingredient or Recipe object itself
+            HashMap<Integer, Ingredient> ingredients = new HashMap<>();
+            HashMap<Integer, Recipe> recipes = new HashMap<>();
+            //Loop through recipes, add to HashMap
+            ingredients.put(1, new Ingredient("bread", 1, null, 100, 5, 5, 5));
+            ingredients.put(2, new Ingredient("ham", 2, null, 230, 5, 5, 5));
+            ingredients.put(3, new Ingredient("sham", 3, null, 230, 5, 5, 5));
+            ingredients.put(4, new Ingredient("chowder", 4, null, 630, 5, 5, 5));
+            ingredients.put(5, new Ingredient("gold", 3, null, 1930, 5, 5, 5));
+            ArrayList<Integer> ingredientIds = new ArrayList<>();
+            ingredientIds.add(1);
+            ingredientIds.add(2);
+            ArrayList<Double> quantitiesList = new ArrayList<>();
+            quantitiesList.add(1.0);
+            quantitiesList.add(1.0);
+            recipes.put(1, new Recipe("ham sandwich", 1, null, ingredientIds, quantitiesList));
+            ingredientIds = new ArrayList<>();
+            ingredientIds.add(3);
+            ingredientIds.add(4);
+            ingredientIds.add(5);
+            quantitiesList = new ArrayList<>();
+            quantitiesList.add(1.0);
+            quantitiesList.add(.5);
+            quantitiesList.add(.1);
+            recipes.put(2, new Recipe("clam chowder", 2, null, ingredientIds, quantitiesList));
+            System.out.println(recipes.size());
+            String json = "[";
+            json += sendRecipes(ingredients, recipes, 2550);
+            finishAndSendJson(json);
 
-        System.out.println("Recipes and Ingredients have been retrieved from server");
+            System.out.println("Recipes and Ingredients have been retrieved from server");
 
 
-    }*/
+        }*/
     private static ArrayList<Integer> parseString(String list) {
         ArrayList<Integer> finalList = new ArrayList<>();
         String num = "";
@@ -170,12 +170,20 @@ public class Main {
         int recipesSize = recipes.size();
         System.out.println(recipesSize);
         Random r = new Random();
+        String[] days =  {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" , "Sunday"};
+        String[] times =  {"Breakfast", "Lunch", "Dinner"};
         for (int day = 0; day < 7; day++){
-            for (int i = 0; i < 3; i++) {
+            if (day != 0) {
+                result += (",");
+            }
+            result += ("\"" + days[day]);
+            result += ("\": {");
+            int caloriesLeft = totalCal;
+            for (int time = 0; time < 3; time++) {
                 int timeout = 0;
                 int currentCal = 0;
                 Recipe randomRecipe = null;
-                while ((currentCal == 0 || currentCal > totalCal) && timeout < 10){
+                while ((currentCal == 0 || currentCal > caloriesLeft) && timeout < 10){
                     currentCal = 0;
                     randomRecipe = recipes.get(r.nextInt(recipesSize) + 1);
                     System.out.println(randomRecipe.recipeName);
@@ -185,38 +193,42 @@ public class Main {
                     }
                     timeout++;
                 }
-                if (result.length() != 0){
-                    result += ",";
+                if (time != 0) {
+                    result += (",");
                 }
+                result += ("\"" + times[time]);
+                result += ("\": {");
                 result += jsonMaker(ingredients, randomRecipe, currentCal);
-                totalCal -= currentCal;
+                result += ("}");
+                caloriesLeft -= currentCal;
             }
+            result += ("}");
         }
         return result;
     }
 
     private static String jsonMaker(HashMap<Integer, Ingredient> ingredients, Recipe recipe, int totalCalories) {
         String json = "";
-        json += ("{'recipe': {\n");
-        json += ("\t'name': '");
+        json += ("\t\"name\": \"");
         json += (recipe.recipeName);
-        json += ("',\n\t'picture_id': '");
+        json += ("\",\n\t\"picture_id\": \"");
         json += recipe.picID;
-        json += ("',\n\t'calories': '");
+        json += ("\",\n\t\"calories\": \"");
         json += totalCalories;
-        json += ("',\n\t'ingredients': {");
+        json += ("\",\n\t\"ingredients\": [");
         for (int i = 0; i < recipe.ingredientsIDList.size(); i++) {
             if( i!= 0){json += ",";}
-            json += "\n\t\t'" + ingredients.get(recipe.ingredientsIDList.get(i)).ingredientName;
-            json += "': {\n\t\t\t'quantity': '" + recipe.ingredientsQuantity.get(i);
-            json += "'\n\t\t}";
+            json += "\n\t\t{";
+            json += "\n\t\t\t\"name\": \"" + ingredients.get(recipe.ingredientsIDList.get(i)).ingredientName;
+            json += "\",\n\t\t\t\"quantity\": \"" + recipe.ingredientsQuantity.get(i);
+            json += "\"\n\t\t}";
         }
-        json += "\n\t}\n}}";
+        json += "\n]";
         return json;
     }
 
     private static void finishAndSendJson(String json) {
-        json += "\n]";
+        json += "\n}";
         System.out.println(json);
     }
 
